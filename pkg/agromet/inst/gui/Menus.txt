@@ -1,0 +1,15 @@
+# AgroMet menu
+# by Ph. Grosjean, 2010 <phgrosjean@sciviews.org>
+
+# Add menus to the RGui console (Windows only)
+$ConsoleMain
+|$AgroMet
+||Assistant...							~~ AMDlg()
+||-
+||Exit ZooImage							~~ ExitAM()
+||About ...								~~ AboutAM()
+
+# Add menu to the RGui console popup (Windows only)
+$ConsolePopup
+|$AgroMet
+||Asssitant...							~~ AMDlg()

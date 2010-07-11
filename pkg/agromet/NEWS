@@ -1,0 +1,6 @@
+= agromet News
+
+== agromet version 1.0-0
+
+* This is the first version of the AgroMet GUI. Only basic functions are
+  implemented, as well as, the complete tools for AURELHY interpolation

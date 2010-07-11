@@ -1,0 +1,10 @@
+# AgroMet Tk toolbar
+# by Ph. Grosjean, 2010 <phgrosjean@sciviews.org>
+
+# Create a Tk toolbar (intended for a window called 'AMDlgWin')
+$Tk.AMDlgWin
+|$MainToolbar
+||[butImport]Import data...			~~ guiDlgFunction("import")
+||[butSave]Export results...		~~ guiDlgFunction("export")
+||-
+||[butOpen]Load data...				~~ loadObjects()
