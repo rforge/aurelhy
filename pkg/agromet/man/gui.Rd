@@ -6,6 +6,8 @@
 \alias{closeAgromet}
 \alias{focusR}
 \alias{focusGraph}
+\alias{importAM}
+\alias{exportAM}
 \alias{loadObjects}
 \alias{saveObjects}
 \alias{listObjects}
@@ -20,6 +22,8 @@
 \alias{updateVgm}
 \alias{extractPca}
 \alias{extractInterpolated}
+\alias{map}
+\alias{interpolateAurelhy}
 
 \title{ The AgroMet GUI (Graphical User Interface) }
 \description{
@@ -36,6 +40,9 @@ closeAgrometAssistant()
 
 focusR()
 focusGraph()
+
+importAM()
+exportAM()
 
 loadObjects()
 saveObjects()
@@ -54,8 +61,13 @@ updatePca()
 updateLm()
 updateVgm()
 
+interpolateAurelhy()
 extractPca()
 extractInterpolated()
+
+map(x, max.xgrid = 500, col = terrain.colors(50), add = FALSE, 
+    xlab = if (add) "" else "Longitude", ylab = if (add) "" else "Latitude", 
+    asp = 1, \dots)
 }
 
 \arguments{
@@ -69,6 +81,15 @@ extractInterpolated()
     function stops execution. This is used in the AgroMet GUI, in order to
 	avoid interrupting abruptly code execution and to report the error in a more
 	"civilized" way to the user }
+  \item{x}{ A geomat object (or geotm, most of the time) }
+  \item{max.xgrid}{ The maximum number of points to use along the X-axis }
+  \item{col}{ Colors to use for the map }
+  \item{add}{ Do we add the map to an existing plot? }
+  \item{xlab}{ The label of the X-axis }
+  \item{ylab}{ The label of the Y-axis }
+  \item{asp}{ The aspect ratio, use 1 (by default) to avoid stretching the map
+    in one or the other direction }
+  \item{\dots}{ Further graphical arguments passed to the \code{image()} function }
 }
 
 \value{
@@ -76,6 +97,7 @@ extractInterpolated()
     window.
   \code{AboutAgromet()} gives some information about the current AgroMet version.
   \code{ExitAgromet()} unloads the agromet package.
+  The other function should not be used directly by the end-user.
 }
 
 \author{ Philippe Grosjean <Philippe.Grosjean@umons.ac.be> }

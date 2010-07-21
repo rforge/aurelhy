@@ -43,6 +43,14 @@
 
 	# Add a toolbar (read it from file 'ToolbarAMDlgWin.txt')
 	ToolRead(file.path(getTemp("AMgui"), "ToolbarsAMDlgWin.txt"))
+	# Add tooltip text
+	.guiTools <- getTemp(".guiTools")
+	N <- names(.guiTools)
+	for (i in 2:length(N)) {
+		tip <- basename(N[i])
+		if (grepl("^[^-]", tip))
+			tk2tip(.guiTools[[N[i]]], tip)
+	}
 
 	# Add a statusbar with a text and a progressbar
 	status <- tk2frame(AMDlgWin)
@@ -102,14 +110,14 @@
 "focusR" <- function ()
 {
 	# Switch the focus to the R console
-	### TODO: notify this command is not available elsewhere (inactivate menu?)
+	# This command is only available with Rgui
 	if (isRgui()) bringToTop(-1)
 }
 
 "focusGraph" <- function ()
 {
 	# Focus to the active R graph (create one if there is no graph device)
-	### TODO: notify this command is not available elsewhere (inactivate menu?)
+	# This command is only available with Rgui
 	if (is.null(dev.list())) {
 		device <- match.fun(getOption("device"))
 		device()
@@ -117,6 +125,132 @@
 		# Activate current graph window
 		if (isRgui()) bringToTop()
 	}
+}
+
+"importAM" <- function ()
+{
+	file <- paste(as.character(tkgetOpenFile(filetypes = "{{ESRI file} {.asc .shp}}",
+			title = "Import data...")), collapse = " ")
+	if (length(file) == 0 || file == "") return(invisible())
+	# Importation depends if we have a grid or shape file
+	if (grepl("[.][aA][sS][cC]$", file)) {
+		# Ask for the kind of object to create
+		kind <- select.list(c("geomat (general numerical grid)",
+			"geotm (terrain model, integers)",
+			"geomask (mask, booleans)"),
+			title = "AgroMet object to create...", graphics = TRUE)
+		if (length(kind) == 0) return(invisible())
+		# Ask for the name of the object
+		obj <- guiDlgInput("Name of the object (use only a-zA-Z0-9._):",
+			paste("Import data into a", kind),
+			make.names(sub("[.][aA][sS][cC]$", "", basename(file))))
+		if (length(obj) == 0) return(invisible()) else obj <- make.names(obj)
+		if (exists(obj, envir = .GlobalEnv)) {
+			res <- guiDlgMessage(paste("'", obj,
+				"' already exists. Do you want to replace it with the imported data?", sep = ""),
+				"Existing object", "yesno", icon = "question")
+			if (res == "no") return(invisible())
+		}
+		# Import the data now
+		if (kind == "geomat (general numerical grid)") {
+			assign(obj, read.geomat(file), envir = .GlobalEnv)
+		} else if (kind == "geotm (terrain model, integers)") {
+			assign(obj, read.geotm(file), envir = .GlobalEnv)
+		} else if (kind == "geomask (mask, booleans)") {
+			assign(obj, read.geomask(file), envir = .GlobalEnv)
+		}
+	
+	} else { # This must be an ESRI SHAPE file (.shp)
+		# Ask for the kind of object to create
+		kind <- select.list(c("geoshapes (one or more shapes)",
+			"geopoints (georeferenced points)"),
+			title = "AgroMet object to create...", graphics = TRUE)
+		if (length(kind) == 0) return(invisible())
+		# Ask for the name of the object
+		obj <- guiDlgInput("Name of the object (use only a-zA-Z0-9._):",
+			paste("Import data into a", kind),
+			make.names(sub("[.][sS][hH][pP]$", "", basename(file))))
+		if (length(obj) == 0) return(invisible()) else obj <- make.names(obj)
+		if (exists(obj, envir = .GlobalEnv)) {
+			res <- guiDlgMessage(paste("'", obj,
+				"' already exists. Do you want to replace it with the imported data?", sep = ""),
+				"Existing object", "yesno", icon = "question")
+			if (res == "no") return(invisible())
+		}
+		# Import the data now
+		if (kind == "geoshapes (one or more shapes)") {
+			assign(obj, read.geoshapes(file), envir = .GlobalEnv)
+		} else if (kind == "geopoints (georeferenced points)") {
+			assign(obj, read.geopoints(file), envir = .GlobalEnv)
+		}
+	}
+}
+
+"exportAM" <- function ()
+{
+	Object <- getVar(c("geomat", "geoshapes", "geopoints",
+		"predict.aurelhy"), multi = TRUE, title = paste("Choose one ", getTemp("AMname"),
+		"object:"), warn.only = FALSE)
+	if (length(Object) == 0 || (length(Object) == 1 && Object == ""))
+		return(invisible())
+	# Depending on which object is choosen, we propose to save it the appropriate way
+	obj <- get(Object, envir = .GlobalEnv)
+	if (inherits(obj, "predict.aurelhy")) {
+		# Export the result transformed into a geomat
+		obj <- as.geomat(obj)
+	}
+	
+	if (inherits(obj, "geotm")) {
+		file <- paste(as.character(tkgetSaveFile(filetypes = "{{ESRI ASCII grid} {.asc}}",
+			initialfile = paste(Object, ".asc", sep = ""),
+			title = paste("Export", Object, "..."))),
+			collapse = " ")
+		if (length(file) == 0 || file == "") return(invisible())
+		if (regexpr("[.][aA][sS][cC]$", file) < 0)
+			file <- paste(file, ".asc", sep = "")
+		write.geotm(obj, file = file)
+
+	} else if (inherits(obj, "geomask")) {
+		file <- paste(as.character(tkgetSaveFile(filetypes = "{{ESRI ASCII grid} {.asc}}",
+			initialfile = paste(Object, ".asc", sep = ""),
+			title = paste("Export", Object, "..."))),
+			collapse = " ")
+		if (length(file) == 0 || file == "") return(invisible())
+		if (regexpr("[.][aA][sS][cC]$", file) < 0)
+			file <- paste(file, ".asc", sep = "")
+		write.geomask(obj, file = file)
+
+	} else if (inherits(obj, "geomat")) {
+		file <- paste(as.character(tkgetSaveFile(filetypes = "{{ESRI ASCII grid} {.asc}}",
+			initialfile = paste(Object, ".asc", sep = ""),
+			title = paste("Export", Object, "..."))),
+			collapse = " ")
+		if (length(file) == 0 || file == "") return(invisible())
+		if (regexpr("[.][aA][sS][cC]$", file) < 0)
+			file <- paste(file, ".asc", sep = "")
+		write.geomat(obj, file = file)		
+
+	} else if (inherits(obj, "geoshapes")) {
+		file <- paste(as.character(tkgetSaveFile(filetypes = "{{ESRI SHAPE file} {.shp}}",
+			initialfile = paste(Object, ".shp", sep = ""),
+			title = paste("Export", Object, "..."))),
+			collapse = " ")
+		if (length(file) == 0 || file == "") return(invisible())
+		# Eliminate extension, if provided as .shp, shx, or .dbf
+		file <- sub("[.][sSdD][hHbB][pPxXfF]$", "", file)
+		write.geoshapes(obj, file = file)			
+
+	} else if (inherits(obj, "geopoints")) {
+		file <- paste(as.character(tkgetSaveFile(filetypes = "{{ESRI SHAPE file} {.shp}}",
+			initialfile = paste(Object, ".shp", sep = ""),
+			title = paste("Export", Object, "..."))),
+			collapse = " ")
+		if (length(file) == 0 || file == "") return(invisible())
+		# Eliminate extension, if provided as .shp, shx, or .dbf
+		file <- sub("[.][sSdD][hHbB][pPxXfF]$", "", file)
+		write.geopoints(obj, file = file)
+		
+	} else stop("Unrecognized object class")
 }
 
 "loadObjects" <- function ()
@@ -134,13 +268,13 @@
 "saveObjects" <- function ()
 {
 	Objects <- getVar(c("geomat", "geoshapes", "geopoints", "auremask",
-		"aurelhy"), multi = TRUE, title = paste("Choose", getTemp("AMname"),
+		"aurelhy", "predict.aurelhy"), multi = TRUE, title = paste("Choose", getTemp("AMname"),
 		"object(s):"), warn.only = FALSE)
 	if (length(Objects) == 0 || (length(Objects) == 1 && Objects == ""))
 		return(invisible())
 	file <- paste(as.character(tkgetSaveFile(filetypes = "{{R data} {.RData}}",
-			initialfile = paste(getTemp("ZIname"), ".RData", sep = ""),
-			title = paste("Save", getTemp("ZIname"), "data under..."))),
+			initialfile = paste(getTemp("AMname"), ".RData", sep = ""),
+			title = paste("Save", getTemp("AMname"), "data under..."))),
 			collapse = " ")
 	if (length(file) == 0 || file == "") return(invisible())
 	if (regexpr("[.][rR][dD][aA][tT][aA]$", file) < 0)
@@ -155,7 +289,7 @@
 		stop("No objects currently loaded in memory!\n")
 	Filter <- NULL
 	for (i in 1:length(varlist)) Filter[i] <- inherits(get(varlist[i]),
-		c("geomat", "geoshapes", "geopoints", "auremask", "aurelhy"))
+		c("geomat", "geoshapes", "geopoints", "auremask", "aurelhy", "predict.aurelhy"))
 	varlist <- varlist[Filter]
 	if (length(varlist) == 0) {
 		stop("No ", getTemp("AMname"), " objects currently loaded in memory!\n")
@@ -167,7 +301,7 @@
 "removeObjects" <- function ()
 {
 	Objects <- getVar(c("geomat", "geoshapes", "geopoints", "auremask",
-		"aurelhy"), multi = TRUE,
+		"aurelhy", "predict.aurelhy"), multi = TRUE,
 	title = paste(getTemp("AMname"), "object(s) to remove:"), warn.only = FALSE)
 	if (length(Objects) == 0 || (length(Objects) == 1 && Objects == ""))
 		return(invisible())
@@ -177,7 +311,7 @@
 "printObject" <- function ()
 {
 	Obj <- getVar(c("geomat", "geoshapes", "geopoints", "auremask",
-		"aurelhy"), multi = FALSE,
+		"aurelhy", "predict.aurelhy"), multi = FALSE,
 	title = paste(getTemp("AMname"), "object(s) to remove:"), warn.only = FALSE)
 	if (length(Obj) == 0 || (length(Obj) == 1 && Obj == ""))
 		return(invisible())
@@ -244,7 +378,7 @@ title = paste("Choose a ", class, ":", sep = ""), warn.only = TRUE)
 
 "viewAurelhyPredict" <- function ()
 {
-	# Select an aurelhy object and display the PCA screeplot + summary
+	# Select an aurelhy object and display the regression/krige plot + summary
 	Ap <- getVar("predict.aurelhy", warn.only = FALSE)
 	if (length(Ap) == 0 || (length(Ap) == 1 && Ap == ""))
 		return(invisible())
@@ -270,25 +404,139 @@ title = paste("Choose a ", class, ":", sep = ""), warn.only = TRUE)
 
 "updatePca" <- function ()
 {
-	# TODO: select nbr.pc and scale and update the aurelhy object
+	# Select nbr.pc and scale and update the aurelhy object
+	A <- getVar("aurelhy", warn.only = FALSE)
+	if (length(A) == 0 || (length(A) == 1 && A == ""))
+		return(invisible())
+	obj <- get(A, envir = .GlobalEnv)
+	# Get the number of PCs to keep
+	npc <- attr(obj, "nbr.pc")
+	npc2 <- guiDlgInput("Number of PCs to keep for landscape descriptors:",
+		"Update PCA", npc)
+	if (length(npc2) == 0) return(invisible())
+	npc2 <- as.integer(npc2)[1]
+	if (npc2 < 1) stop("You cannot use less than 1 PC")
+	npcmax <- ncol(attr(obj, "land"))
+	if (npc2 > npcmax) stop("You cannot use more than ", npcmax, "PCs")
+		
+	# Do we scale the variables?
+	res <- guiDlgMessage("Do you want to scale initial land descriptors (same variance)? [no in original AURELHY method]",
+		"Scale PCA", "yesno", icon = "question")
+	if (res == "no") scale <- FALSE else scale <- TRUE
+	
+	# Update the object
+	assign(A, update(obj, nbr.pc = npc2, scale = scale),envir = .GlobalEnv)
 }
 
 "updateLm" <- function ()
 {
-	# TODO: enter a model and update it in the object
+	# Select an aurelhy object and update its regression model
+	A <- getVar("aurelhy", warn.only = FALSE)
+	if (length(A) == 0 || (length(A) == 1 && A == ""))
+		return(invisible())
+	obj <- get(A, envir = .GlobalEnv)
+	mod <- deparse(attr(obj, "model"))
+	# Enter a regression model and update it in the object
+	mod2 <- guiDlgInput(paste("Model to use for the regression with this aurelhy object\n(variables are: ", paste(names(obj), collapse = ", "), ")", sep = ""),
+		"Update regression model", mod)
+	if (length(mod2) == 0 || mod2 == mod) return(invisible())
+	assign(A, update(obj, model = mod2), envir = .GlobalEnv)
 }
 
 "updateVgm" <- function ()
 {
-	# TODO: enter code for calculating a vgm() and update it in the object
+	# Enter code for calculating a vgm() and update it in the object
+	A <- getVar("aurelhy", warn.only = FALSE)
+	if (length(A) == 0 || (length(A) == 1 && A == ""))
+		return(invisible())
+	obj <- get(A, envir = .GlobalEnv)
+	vgm <- 'vgm(1, "Sph", 10, 1)'
+	# Enter a variogram model and update it in the object
+	vgm2 <- guiDlgInput('Variogram model to use with this aurelhy object\ne.g., vgm(1, "Sph", 10, 0.5): psill, model as Sph, Exp, Gau, etc., range and nugget',
+		"Update variogram model", vgm)
+	if (length(vgm2) == 0 || vgm2 == vgm) return(invisible())
+	assign(A, update(obj, vgmodel = eval(parse(text = vgm2))), envir = .GlobalEnv)
+}
+
+"interpolateAurelhy" <- function ()
+{
+	# This function performs interpolation of some data, using an aurelhy object
+	# The aurelhy object
+	A <- getVar("aurelhy", warn.only = FALSE)
+	if (length(A) == 0 || (length(A) == 1 && A == ""))
+		return(invisible())
+	myaurelhy <- get(A, envir = .GlobalEnv)
+	
+	# The geopoints object
+	P <- getVar("geopoints", warn.only = FALSE)
+	if (length(P) == 0 || (length(P) == 1 && P == ""))
+		return(invisible())
+	pts <- get(P, envir = .GlobalEnv)
+	# Get the list of variables available in pts
+	vars <- names(pts)
+	# Eliminate 'Id', 'x' and 'y'
+	vars <- vars[!vars %in% c("Id", "x", "y")]
+	myvar <- select.list(vars, multiple = FALSE,
+		title = "Select one variable to interpolate", graphics = TRUE)
+	if (length(myvar) == 0) return(invisible())	
+	# Indicate the name of the resulting predict.aurelhy object
+	obj <- guiDlgInput("Name of the object (use only a-zA-Z0-9._):",
+		"Interpolate data with AURELHY",
+		paste(P, myvar, sep = "."))
+	if (length(obj) == 0) return(invisible()) else obj <- make.names(obj)
+	if (exists(obj, envir = .GlobalEnv)) {
+		res <- guiDlgMessage(paste("'", obj,
+			"' already exists. Do you want to replace it?", sep = ""),
+			"Existing object", "yesno", icon = "question")
+		if (res == "no") return(invisible())
+	}
+	assign(obj, predict(myaurelhy, pts, myvar), envir = .GlobalEnv)
 }
 
 "extractPca" <- function ()
 {
-	# TODO: extract one PCA component and format it as a geomat object
+	# Extract one PCA component and format it as a geomat object
+	A <- getVar("aurelhy", warn.only = FALSE)
+	if (length(A) == 0 || (length(A) == 1 && A == ""))
+		return(invisible())
+	obj <- get(A, envir = .GlobalEnv)
+	# Determine which PC to extract
+	npc <- attr(obj, "nbr.pc")
+	pcs <- paste("PC", 1:npc, sep = "")
+	pc <- select.list(pcs, multiple = FALSE,
+		title = "Select one PC to extract", graphics = TRUE)
+	if (length(pc) == 0) return(invisible())	
+	objn <- paste(A, pc, sep = ".")
+	assign(objn, as.geomat(obj, pc), envir = .GlobalEnv)
+	cat(pc, " extracted as ", objn, "\n", sep = "")
 }
 
 "extractInterpolated" <- function ()
 {
-	# TODO: extract interpolated data and convert to a geomat
+	# Extract interpolated data and convert to a geomat
+	A <- getVar("predict.aurelhy", warn.only = FALSE)
+	if (length(A) == 0 || (length(A) == 1 && A == ""))
+		return(invisible())
+	obj <- get(A, envir = .GlobalEnv)
+	# Choose the name for interpolated data
+	objn <- guiDlgInput("Name of the geomat object with your interpolated data:",
+		"Extract interpolated data", paste(A, "interpolated", sep = "."))
+	if (length(objn) == 0) return(invisible())
+	# Check if this object already exists
+	if (exists(objn, envir = .GlobalEnv)) {
+		res <- guiDlgMessage(paste("'", objn,
+			"' already exists. Do you want to replace it?", sep = ""),
+			"Existing object", "yesno", icon = "question")
+		if (res == "no") return(invisible())
+	}
+	assign(objn, as.geomat(obj), envir = .GlobalEnv)
+}
+
+# This is just a wrapper function for image.geomat
+# to be called by the GUI with guiDlgFunction("map")
+"map" <- function (x, max.xgrid = 500, col = terrain.colors(50), add = FALSE, 
+xlab = if (add) "" else "Longitude", ylab = if (add) "" else "Latitude", 
+asp = 1, ...) {
+	aurelhy:::image.geomat(x = x, max.xgrid = max.xgrid, col = col, add = add,
+		xlab = xlab, ylab = ylab, asp = asp, ...)
 }

@@ -4,7 +4,23 @@
 # Create a Tk toolbar (intended for a window called 'AMDlgWin')
 $Tk.AMDlgWin
 |$MainToolbar
-||[butImport]Import data...			~~ guiDlgFunction("import")
-||[butSave]Export results...		~~ guiDlgFunction("export")
+||[butImport]Import data...								~~ importAM()
+||[butExport]Export results...							~~ exportAM()
 ||-
-||[butOpen]Load data...				~~ loadObjects()
+||[butOpen]Load data...									~~ loadObjects()
+||[butSave]Save data...									~~ saveObjects()
+||[butList]List data									~~ listObjects()
+||[butPrint]Print data...								~~ printObject()
+||--
+||[butCreateMask]Create a mask (auremask)...			~~ guiDlgFunction("auremask", var = "myAmask")
+||[butCreateAurelhy]Create an aurelhy object...			~~ guiDlgFunction("aurelhy", var = "myAurelhy")
+||[butInterpolate]Interpolate data with AURELHY...		~~ interpolateAurelhy()
+||[butInterpolExtract]Extract interpolated data...		~~ extractInterpolated()
+||---
+||[butMap]Map gridded data...							~~ guiDlgFunction("map")
+||[butShape]Add a shape to the map...					~~ guiDlgFunction("lines")
+||[butPoints]Add points to the map...					~~ guiDlgFunction("points")
+||----
+||[butPlotMask]Auremask on top of a terrain model...	~~ viewAuremask()
+||[butPlotPCA]AURELHY PCA screeplot...					~~ viewAurelhy()
+||[butPlotAurelhy]AURELHY diagnostic plots...			~~ viewAurelhyPredict()

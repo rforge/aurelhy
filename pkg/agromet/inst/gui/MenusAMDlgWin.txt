@@ -4,54 +4,55 @@
 # Create a Tk menu (intended for a window called 'AMDlgWin')
 $Tk.AMDlgWin
 |$Data
-||&Import data...	Ctrl+I				~~ guiDlgFunction("import")
-||&Export results...	Ctrl+E			~~ guiDlgFunction("export")
+||&Import data...	Ctrl+I					~~ importAM()
+||&Export results...	Ctrl+E				~~ exportAM()
 ||-
-||&Load...								~~ loadObjects()
-||&Save...								~~ saveObjects()
+||&Load...									~~ loadObjects()
+||&Save...									~~ saveObjects()
 ||--
-||&List									~~ listObjects()
-||&Print								~~ printObject()
-||&Remove...							~~ removeObjects()
+||&List...									~~ listObjects()
+||&Print									~~ printObject()
+||&Remove...								~~ removeObjects()
 ||---
 ||$E&xit
-|||From the &assistant	Ctrl+X			~~ closeAgrometAssistant()
-|||From &AgroMet						~~ closeAgromet()
+|||From the &assistant	Ctrl+X				~~ closeAgrometAssistant()
+|||From &AgroMet							~~ closeAgromet()
 |$Process
-||Create a mask (auremask)				~~ guiDlgFunction("auremask", var = "myAmask")
-||Create an aurelhy object				~~ guiDlgFunction("aurelhy", var = "myAurelhy")
+||Create a mask (auremask)...	Ctrl+C		~~ guiDlgFunction("auremask", var = "myAmask")
+||Create an aurelhy object...	Ctrl+A		~~ guiDlgFunction("aurelhy", var = "myAurelhy", maxargs = 12)
+||Interpolate data with AURELHY...	Ctrl+N	~~ interpolateAurelhy()
 ||-
-||Update PCA							~~ updatePca()
-||Update linear model					~~ updateLm()
-||Update variagram model				~~ updateVgm()
+||Update PCA...								~~ updatePca()
+||Update linear model...					~~ updateLm()
+||Update variagram model...					~~ updateVgm()
 ||--
-||Extract one PCA component				~~ extractPca()
-||Extract interpolated data				~~ extractInterpolated()
+||Extract one PCA component...				~~ extractPca()
+||Extract interpolated data...				~~ extractInterpolated()
 |$View
-||&Map...	Ctrl+M						~~ guiDlgFunction("plot")
-||Add &shape...	Ctrl+S     				~~ guiDlgFunction("lines")
-||Add &points...	Ctrl+P 				~~ guiDlgFunction("points")
+||&Map gridded data...	Ctrl+M				~~ guiDlgFunction("map", maxargs = 8)
+||Add a &shape to the map...	Ctrl+S		~~ guiDlgFunction("lines")
+||Add &points to the map...	Ctrl+P 			~~ guiDlgFunction("points")
 ||-
-||Auremask on &top of a terrain model	~~ viewAuremask()
+||Auremask on &top of a terrain model...	~~ viewAuremask()
 ||--
-||Aurelhy PCA s&creeplot				~~ viewAurelhy()
-||Aurelhy interpolation model			~~ viewAurelhyPredict()
+||AURELHY PCA s&creeplot...					~~ viewAurelhy()
+||AURELHY &diagnostic plots...				~~ viewAurelhyPredict()
 |$Apps
-||&R Console	Ctrl+R					~~ focusR()
-||Active R &Graph	Ctrl+G				~~ focusGraph()
+||&R Console	Ctrl+R						~~ focusR()
+||Active R &Graph	Ctrl+G					~~ focusGraph()
 ||-
 ||$R Graphs
-|||&New									~~ dev.new()
-|||&Activate next						~~ {dev.set(); if (isRgui()) bringToTop()}
-|||&Close all							~~ graphics.off()
+|||&New										~~ dev.new()
+|||&Activate next							~~ {dev.set(); if (isRgui()) bringToTop()}
+|||&Close all								~~ graphics.off()
 |$Help
-||&About AgroMet...						~~ aboutAgromet(graphical = TRUE)
+||&About AgroMet...							~~ aboutAgromet(graphical = TRUE)
 ||-
-||&Help on aurelhy						~~ print(help(aurelhy))
-||&Example aurelhy						~~ example(aurelhy)
-||Help on aure&mask						~~ print(help(auremask))
-||Example auremas&k						~~ example(auremask)
+||&Help on aurelhy							~~ print(help(aurelhy))
+||&Example aurelhy							~~ example(aurelhy)
+||Help on aure&mask							~~ print(help(auremask))
+||Example auremas&k							~~ example(auremask)
 ||--
-||Help on &variogram models				~~ print(help(vgm))
-||&List available variagram models		~~ print(vgm())
+||Help on &variogram models					~~ print(help(vgm))
+||&List available variagram models			~~ print(vgm())
 

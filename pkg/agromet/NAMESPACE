@@ -1,9 +1,11 @@
-import(stats, graphics, gstat, aurelhy, svMisc, svWidgets, svDialogs, tcltk2)
+import(stats, graphics, gstat, aurelhy, svMisc, svWidgets, svDialogs, tcltk2, tcltk)
 
 export(AMDlg,
        aboutAgromet,
        closeAgromet,
        closeAgrometAssistant,
+	   importAM,
+	   exportAM,
 	   exitAgromet,
 	   extractPca,
 	   extractInterpolated,
@@ -20,4 +22,6 @@ export(AMDlg,
 	   updateVgm,
 	   viewAuremask,
 	   viewAurelhy,
-	   viewAurelhyPredict)
+	   viewAurelhyPredict,
+	   interpolateAurelhy,
+	   map)
