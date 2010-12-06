@@ -29,12 +29,4 @@
   Maintainer: Philippe Grosjean <Philippe.Grosjean@umons.ac.be>
 }
 
-\references{
-  Not yet!
-}
-
-\examples{
-# TODO...
-}
-
 \keyword{package}
